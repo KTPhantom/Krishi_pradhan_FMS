@@ -1,5 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/utils/app_state.dart';
+import 'settings_page.dart';
 
 // Enum for menu choices
 enum ProfileMenuChoice { profile, settings, modeLight, modeDark, modeSystem }
@@ -7,31 +10,7 @@ enum ProfileMenuChoice { profile, settings, modeLight, modeDark, modeSystem }
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  void _onMenuSelection(ProfileMenuChoice choice, BuildContext context) {
-    // Placeholder actions - replace with actual navigation or theme changes
-    switch (choice) {
-      case ProfileMenuChoice.profile:
-        print("Profile selected");
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-        break;
-      case ProfileMenuChoice.settings:
-        print("Settings selected");
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
-        break;
-      case ProfileMenuChoice.modeLight:
-        print("Light Mode selected");
-        // ThemeManager.setTheme(ThemeMode.light);
-        break;
-      case ProfileMenuChoice.modeDark:
-        print("Dark Mode selected");
-        // ThemeManager.setTheme(ThemeMode.dark);
-        break;
-      case ProfileMenuChoice.modeSystem:
-        print("System Mode selected");
-        // ThemeManager.setTheme(ThemeMode.system);
-        break;
-    }
-  }
+  // Old popup menu removed; using profile sheet + Settings page instead
 
   @override
   Widget build(BuildContext context) {
@@ -105,48 +84,108 @@ class HomePage extends StatelessWidget {
             ),
           ),
           const _GlassDock(),
-          // Profile Icon PopupMenuButton
+          // Profile circle that opens a draggable, scrollable sheet
           Positioned(
-            top: 40, // Adjust as needed for status bar height
+            top: 40,
             right: 16,
-            child: PopupMenuButton<ProfileMenuChoice>(
-              icon: const Icon(Icons.account_circle, size: 32, color: Colors.black54), // Added color and size
-              onSelected: (ProfileMenuChoice choice) => _onMenuSelection(choice, context),
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<ProfileMenuChoice>>[
-                const PopupMenuItem<ProfileMenuChoice>(
-                  value: ProfileMenuChoice.profile,
-                  child: ListTile(leading: Icon(Icons.person_outline), title: Text('Profile')),
-                ),
-                const PopupMenuItem<ProfileMenuChoice>(
-                  value: ProfileMenuChoice.settings,
-                  child: ListTile(leading: Icon(Icons.settings_outlined), title: Text('Settings')),
-                ),
-                const PopupMenuDivider(),
-                // Using SubmenuButton for nested "Mode" options
-                PopupMenuItem(
-                  child: SubmenuButton(
-                     menuChildren: <Widget>[
-                        PopupMenuItem<ProfileMenuChoice>(
-                          value: ProfileMenuChoice.modeLight,
-                          child: ListTile(leading: Icon(Icons.wb_sunny_outlined), title: Text('Light')),
-                        ),
-                        PopupMenuItem<ProfileMenuChoice>(
-                          value: ProfileMenuChoice.modeDark,
-                          child: ListTile(leading: Icon(Icons.nightlight_round), title: Text('Dark')),
-                        ),
-                        PopupMenuItem<ProfileMenuChoice>(
-                          value: ProfileMenuChoice.modeSystem,
-                          child: ListTile(leading: Icon(Icons.brightness_auto_outlined), title: Text('System')),
-                        ),
-                     ],
-                     child: Text("Mode"),
-                   )
-                 )
-              ],
+            child: GestureDetector(
+              onTap: () => _openProfileSheet(context),
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.green,
+                child: Icon(Icons.person, color: Colors.white),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _openProfileSheet(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black26.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, -2)),
+                ],
+              ),
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: const [
+                      CircleAvatar(radius: 24, backgroundColor: Colors.green, child: Icon(Icons.person, color: Colors.white)),
+                      SizedBox(width: 12),
+                      Expanded(child: Text('Farmer Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  const Text('Language', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _LangChip('English', 'en'),
+                      _LangChip('हिन्दी', 'hi'),
+                      _LangChip('বাংলা', 'bn'),
+                      _LangChip('தமிழ்', 'ta'),
+                      _LangChip('తెలుగు', 'te'),
+                      _LangChip('मराठी', 'mr'),
+                      _LangChip('ગુજરાતી', 'gu'),
+                      _LangChip('ಕನ್ನಡ', 'kn'),
+                      _LangChip('മലയാളം', 'ml'),
+                      _LangChip('ਪੰਜਾਬੀ', 'pa'),
+                      _LangChip('اردو', 'ur'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  const Text('Extended & Compliance', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  _ListTileCard(icon: Icons.verified_user, title: 'KYC', subtitle: 'Verify your identity for services'),
+                  _ListTileCard(icon: Icons.shield, title: 'Compliance Status', subtitle: 'View certifications and regulations'),
+                  _ListTileCard(icon: Icons.assignment, title: 'Documents', subtitle: 'Manage insurance, land records, etc.'),
+                  _ListTileCard(icon: Icons.support_agent, title: 'Support', subtitle: 'Contact support and FAQs'),
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  _ListTileCard(icon: Icons.settings, title: 'Settings', subtitle: 'Appearance, language, notifications', onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+                  }),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -256,6 +295,60 @@ class _GlassDock extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LangChip extends StatelessWidget {
+  final String label;
+  final String code;
+  const _LangChip(this.label, this.code);
+
+  Future<void> _updateLocale(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('preferred_locale_code', code);
+    appLocale.value = Locale(code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = appLocale.value?.languageCode == code || (appLocale.value == null && code == 'en');
+    return ChoiceChip(
+      label: Text(label),
+      selected: isActive,
+      selectedColor: Colors.green.shade50,
+      onSelected: (_) => _updateLocale(code),
+      labelStyle: TextStyle(color: isActive ? Colors.green.shade800 : Colors.black87),
+      side: BorderSide(color: isActive ? Colors.green : Colors.grey.shade300),
+    );
+  }
+}
+
+class _ListTileCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+  const _ListTileCard({required this.icon, required this.title, required this.subtitle, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: ListTile(
+        leading: CircleAvatar(backgroundColor: Colors.green.shade50, child: Icon(icon, color: Colors.green)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
     );
   }

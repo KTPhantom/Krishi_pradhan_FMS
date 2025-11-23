@@ -1,29 +1,91 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'ui/pages/market_page.dart';
 import 'ui/pages/home_page.dart';
 import 'ui/pages/calendar_page.dart';
 import 'ui/pages/finance_page.dart';
-import 'ui/pages/market_page.dart';
 import 'ui/pages/my_fields_page.dart';
+import 'presentation/pages/login_page.dart';
+import 'presentation/providers/auth_provider.dart';
+import 'presentation/widgets/loading_widget.dart';
+import 'core/utils/app_state.dart';
 
-void main() {
-  runApp(const FarmVerseApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initAppState();
+  runApp(
+    const ProviderScope(
+      child: FarmVerseApp(),
+    ),
+  );
 }
 
-class FarmVerseApp extends StatelessWidget {
+class FarmVerseApp extends ConsumerWidget {
   const FarmVerseApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'FarmVerse',
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-      ),
-      home: const GlassDockWrapper(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: appLocale,
+      builder: (context, locale, _) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: appThemeMode,
+          builder: (context, themeMode, __) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'FarmVerse',
+              theme: ThemeData(
+                useMaterial3: true,
+                scaffoldBackgroundColor: Colors.white,
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+              ),
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                brightness: Brightness.dark,
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.green, brightness: Brightness.dark),
+              ),
+              themeMode: themeMode,
+              locale: locale,
+              supportedLocales: const [
+                Locale('en'), // English
+                Locale('hi'), // Hindi
+                Locale('bn'), // Bengali
+                Locale('ta'), // Tamil
+                Locale('te'), // Telugu
+                Locale('mr'), // Marathi
+                Locale('gu'), // Gujarati
+                Locale('kn'), // Kannada
+                Locale('ml'), // Malayalam
+                Locale('pa'), // Punjabi
+                Locale('ur'), // Urdu
+              ],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              localeResolutionCallback: (deviceLocale, supported) {
+                if (locale != null) return locale;
+                if (deviceLocale != null) {
+                  for (final l in supported) {
+                    if (l.languageCode == deviceLocale.languageCode) return l;
+                  }
+                }
+                return const Locale('en');
+              },
+              home: authState.isLoading
+                  ? const LoadingWidget(message: 'Checking authentication...')
+                  : authState.isAuthenticated
+                      ? const GlassDockWrapper()
+                      : const LoginPage(),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -43,7 +105,7 @@ class _GlassDockWrapperState extends State<GlassDockWrapper> {
     HomePage(),
     CalendarPage(),
     FinancePage(),
-    Center(child: Text('Market')),
+    MarketPage(),
     MyFieldsPage(),
   ];
 
@@ -54,6 +116,12 @@ class _GlassDockWrapperState extends State<GlassDockWrapper> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override

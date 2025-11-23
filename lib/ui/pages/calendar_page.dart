@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // You might need to add this package to your pubspec.yaml
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -10,6 +12,7 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   String selectedCrop = 'Spinach';
+  late DateTime selectedDate;
 
   final List<String> cropList = ['Spinach', 'Tomato', 'Wheat', 'Rice'];
 
@@ -59,14 +62,164 @@ class _CalendarPageState extends State<CalendarPage> {
     ],
   };
 
+  // key: crop, value: map of ISO date -> list of task maps
+  Map<String, Map<String, List<Map<String, String>>>> persistedCropTasks = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize selectedDate to today's date (no time)
+    final now = DateTime.now();
+    selectedDate = DateTime(now.year, now.month, now.day);
+    _loadPersistedTasks();
+  }
+
+  Future<void> _loadPersistedTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('calendar_tasks_v1');
+    if (raw == null) return;
+    try {
+      final decoded = json.decode(raw) as Map<String, dynamic>;
+      final Map<String, Map<String, List<Map<String, String>>>> parsed = {};
+      for (final cropEntry in decoded.entries) {
+        final dateMapDynamic = cropEntry.value as Map<String, dynamic>;
+        final Map<String, List<Map<String, String>>> dateMap = {};
+        for (final dateEntry in dateMapDynamic.entries) {
+          final listDynamic = dateEntry.value as List<dynamic>;
+          dateMap[dateEntry.key] = listDynamic
+              .map((e) => Map<String, String>.from(e as Map))
+              .toList();
+        }
+        parsed[cropEntry.key] = dateMap;
+      }
+      setState(() {
+        persistedCropTasks = parsed;
+      });
+    } catch (_) {
+      // ignore parse errors silently
+    }
+  }
+
+  Future<void> _persistTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('calendar_tasks_v1', json.encode(persistedCropTasks));
+  }
+
+  String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+
+  List<Map<String, String>> _tasksFor(String crop, DateTime date) {
+    final defaults = cropSchedules[crop] ?? const [];
+    final savedForDate = persistedCropTasks[crop]?[_dateKey(date)] ?? const [];
+    // Merge defaults first, then saved tasks appended
+    return [...defaults, ...savedForDate];
+  }
+
+  Future<void> _showAddTaskDialog() async {
+    TimeOfDay? pickedTime;
+    final titleController = TextEditingController();
+    final subtitleController = TextEditingController();
+
+    String formatTime(TimeOfDay t) {
+      final dt = DateTime(0, 1, 1, t.hour, t.minute);
+      return DateFormat('HH:mm').format(dt);
+    }
+
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Add Task'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          final now = TimeOfDay.now();
+                          final res = await showTimePicker(
+                            context: context,
+                            initialTime: now,
+                          );
+                          if (res != null) {
+                            setState(() {
+                              pickedTime = res;
+                            });
+                          }
+                        },
+                        child: Text(pickedTime == null
+                            ? 'Pick time'
+                            : formatTime(pickedTime!)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: subtitleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (pickedTime == null || titleController.text.trim().isEmpty) {
+                    return;
+                  }
+                  final task = {
+                    'time': formatTime(pickedTime!),
+                    'title': titleController.text.trim(),
+                    'subtitle': subtitleController.text.trim(),
+                  };
+                  final cropMap = persistedCropTasks[selectedCrop] ?? {};
+                  final dateKey = _dateKey(selectedDate);
+                  final existing = List<Map<String, String>>.from(cropMap[dateKey] ?? []);
+                  existing.add(task);
+                  cropMap[dateKey] = existing;
+                  setState(() {
+                    persistedCropTasks[selectedCrop] = cropMap;
+                  });
+                  await _persistTasks();
+                  if (mounted) Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      // Dispose controllers to prevent memory leaks
+      titleController.dispose();
+      subtitleController.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tasks = cropSchedules[selectedCrop] ?? [];
-    final now = DateTime.now();
+    final tasks = _tasksFor(selectedCrop, selectedDate);
     // Calculate the start of the week (Monday)
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
     // Get current day index (0 for Monday, 6 for Sunday)
-    final currentDayIndex = now.weekday - 1;
+    final currentDayIndex = selectedDate.weekday - 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -117,31 +270,39 @@ class _CalendarPageState extends State<CalendarPage> {
 
                 return Flexible(
                   fit: FlexFit.tight,
-                  child: Column(
-                    children: [
-                      Text(dayName,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 11,
-                              color: isSelected ? Colors.black : Colors.grey)),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.green : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(dateNumber,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      setState(() {
+                        selectedDate = DateTime(dayDate.year, dayDate.month, dayDate.day);
+                      });
+                    },
+                    child: Column(
+                      children: [
+                        Text(dayName,
                             style: TextStyle(
-                              fontSize: 11,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.grey.shade700,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      )
-                    ],
+                                fontWeight: FontWeight.w500,
+                                fontSize: 11,
+                                color: isSelected ? Colors.black : Colors.grey)),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.green : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(dateNumber,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey.shade700,
+                                fontWeight: FontWeight.bold,
+                              )),
+                        )
+                      ],
+                    ),
                   ),
                 );
               }),
@@ -171,6 +332,11 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddTaskDialog,
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
