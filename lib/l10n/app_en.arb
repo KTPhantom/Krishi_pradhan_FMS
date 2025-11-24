@@ -1,0 +1,22 @@
+{
+  "@@locale": "en",
+  "appTitle": "FarmVerse",
+  "home": "Home",
+  "calendar": "Calendar",
+  "finance": "Finance",
+  "market": "Market",
+  "myFields": "My Fields",
+  "login": "Login",
+  "register": "Register",
+  "email": "Email",
+  "password": "Password",
+  "weather": "Weather",
+  "plantHealth": "Plant Health",
+  "todayTasks": "Today's Tasks",
+  "settings": "Settings",
+  "language": "Language",
+  "appearance": "Appearance",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System"
+}

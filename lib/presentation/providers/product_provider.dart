@@ -3,6 +3,7 @@ import '../../core/network/api_client.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../data/models/product_model.dart';
 import 'auth_provider.dart';
+import 'database_provider.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final authService = ref.watch(authServiceProvider);
@@ -11,7 +12,8 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 
 final productRepositoryProvider = Provider<ProductRepositoryImpl>((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return ProductRepositoryImpl(apiClient);
+  final database = ref.watch(databaseProvider);
+  return ProductRepositoryImpl(apiClient, database);
 });
 
 final productsProvider = FutureProvider.family<List<ProductModel>, String?>((ref, category) async {

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'ui/pages/market_page.dart';
 import 'ui/pages/home_page.dart';
 import 'ui/pages/calendar_page.dart';
@@ -11,9 +12,11 @@ import 'presentation/pages/login_page.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/widgets/loading_widget.dart';
 import 'core/utils/app_state.dart';
+import 'core/config/env_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EnvConfig.load();
   await initAppState();
   runApp(
     const ProviderScope(
@@ -64,6 +67,7 @@ class FarmVerseApp extends ConsumerWidget {
                 Locale('ur'), // Urdu
               ],
               localizationsDelegates: const [
+                AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
@@ -126,55 +130,58 @@ class _GlassDockWrapperState extends State<GlassDockWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        PageView(
-          controller: _pageController,
-          onPageChanged: (i) => setState(() => _index = i),
-          children: _pages,
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(40),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                child: Container(
-                  width: 320,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(40),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(5, (i) {
-                      final icons = [
-                        Icons.home_rounded,
-                        Icons.calendar_today,
-                        Icons.attach_money_rounded,
-                        Icons.shopping_cart,
-                        Icons.map_sharp,
-                      ];
-                      return IconButton(
-                        icon: Icon(
-                          icons[i],
-                          size: _index == i ? 28 : 22,
-                          color: _index == i ? Colors.green.shade800 : Colors.grey.shade500,
-                        ),
-                        onPressed: () => _onTap(i),
-                      );
-                    }),
+    return Scaffold(
+      body: Stack(
+        children: [
+          PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(), // Disable swipe to avoid conflict with glass dock gestures
+            onPageChanged: (i) => setState(() => _index = i),
+            children: _pages,
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(40),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                  child: Container(
+                    width: 320,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: List.generate(5, (i) {
+                        final icons = [
+                          Icons.home_rounded,
+                          Icons.calendar_today,
+                          Icons.attach_money_rounded,
+                          Icons.shopping_cart,
+                          Icons.map_sharp,
+                        ];
+                        return IconButton(
+                          icon: Icon(
+                            icons[i],
+                            size: _index == i ? 28 : 22,
+                            color: _index == i ? Colors.green.shade800 : Colors.grey.shade500,
+                          ),
+                          onPressed: () => _onTap(i),
+                        );
+                      }),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,8 @@
+import '../config/env_config.dart';
+
 class ApiConstants {
-  // Base URLs - will be replaced with environment variables
-  static const String baseUrl = 'https://api.farmverse.com/v1';
+  // Base URLs - from environment configuration
+  static String get baseUrl => EnvConfig.apiBaseUrl;
   
   // Endpoints
   static const String login = '/auth/login';

@@ -1,0 +1,22 @@
+{
+  "@@locale": "hi",
+  "appTitle": "कृषि प्रधान",
+  "home": "होम",
+  "calendar": "कैलेंडर",
+  "finance": "वित्त",
+  "market": "बाज़ार",
+  "myFields": "मेरे खेत",
+  "login": "लॉगिन",
+  "register": "रजिस्टर",
+  "email": "ईमेल",
+  "password": "पासवर्ड",
+  "weather": "मौसम",
+  "plantHealth": "पौधों का स्वास्थ्य",
+  "todayTasks": "आज के कार्य",
+  "settings": "सेटिंग्स",
+  "language": "भाषा",
+  "appearance": "दिखावट",
+  "light": "लाइट",
+  "dark": "डार्क",
+  "system": "सिस्टम"
+}

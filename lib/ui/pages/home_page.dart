@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/utils/app_state.dart';
 import 'settings_page.dart';
+import '../components/weather_widget.dart';
 
 // Enum for menu choices
 enum ProfileMenuChoice { profile, settings, modeLight, modeDark, modeSystem }
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  // Old popup menu removed; using profile sheet + Settings page instead
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +22,7 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("24°C", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  const Text("Sunny", style: TextStyle(fontSize: 16, color: Colors.black54)),
-                  const SizedBox(height: 2),
-                  const Text("H:46°C  L:52°C", style: TextStyle(fontSize: 12, color: Colors.black45)),
+                  const WeatherWidget(),
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -83,7 +78,6 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
-          const _GlassDock(),
           // Profile circle that opens a draggable, scrollable sheet
           Positioned(
             top: 40,
@@ -257,44 +251,6 @@ class _DataCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _GlassDock extends StatelessWidget {
-  const _GlassDock();
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-            child: Container(
-              width: 260,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  Icon(Icons.home, color: Colors.green, size: 28),
-                  Icon(Icons.grid_view_rounded, color: Colors.grey),
-                  Icon(Icons.shopping_cart_outlined, color: Colors.grey),
-                  Icon(Icons.person_outline, color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

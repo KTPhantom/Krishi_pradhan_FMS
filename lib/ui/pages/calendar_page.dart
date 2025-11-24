@@ -260,6 +260,9 @@ class _CalendarPageState extends State<CalendarPage> {
               ],
             ),
             const SizedBox(height: 20),
+            // Wrap the row in a SingleChildScrollView or adjust flex to avoid overflow on small screens
+            // But Row with Flexible children usually handles it well if flex is used correctly
+            // RenderFlex overflow happens if children take more than available width
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(7, (index) {
@@ -296,7 +299,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isSelected
-                                    ? Colors.white
+                                    ? Colors.white // Corrected color for selected date number
                                     : Colors.grey.shade700,
                                 fontWeight: FontWeight.bold,
                               )),
@@ -313,18 +316,21 @@ class _CalendarPageState extends State<CalendarPage> {
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   final task = tasks[index];
+                  // Check if dark mode is needed based on the card color logic
+                  // The original code set text color to white if 'dark' is true
+                  // But for general dark mode support, we should check Theme.of(context).brightness
+                  final bool isCardDark = task['title']!.contains('Spray') || task['title']!.contains('Weed');
+                  
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _TaskTile(
                       time: task['time']!,
                       title: task['title']!,
                       subtitle: task['subtitle']!,
-                      color: task['title']!.contains('Spray') ||
-                              task['title']!.contains('Weed')
+                      color: isCardDark
                           ? Colors.green
                           : Colors.white,
-                      dark: task['title']!.contains('Spray') ||
-                          task['title']!.contains('Weed'),
+                      dark: isCardDark,
                     ),
                   );
                 },
@@ -333,10 +339,13 @@ class _CalendarPageState extends State<CalendarPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTaskDialog,
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0), // Raised to avoid being hidden by dock
+        child: FloatingActionButton(
+          onPressed: _showAddTaskDialog,
+          backgroundColor: Colors.green,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }
@@ -359,21 +368,26 @@ class _TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isCardDark = dark || isDarkMode;
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 2.0),
           child: Text(time,
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black54)),
+              style: TextStyle(
+                  fontSize: 12, 
+                  fontWeight: FontWeight.w500, 
+                  color: isDarkMode ? Colors.white70 : Colors.black54)),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color,
+              color: dark ? color : (isDarkMode ? Colors.grey[800] : color),
               borderRadius: BorderRadius.circular(12),
                boxShadow: [
                 BoxShadow(
@@ -391,12 +405,12 @@ class _TaskTile extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: dark ? Colors.white : Colors.black)),
+                        color: isCardDark ? Colors.white : Colors.black)),
                 const SizedBox(height: 3),
                 Text(subtitle,
                     style: TextStyle(
                         fontSize: 11,
-                        color: dark ? Colors.white70 : Colors.grey.shade700)),
+                        color: isCardDark ? Colors.white70 : Colors.grey.shade700)),
               ],
             ),
           ),
