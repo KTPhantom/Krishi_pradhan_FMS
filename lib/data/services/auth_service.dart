@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:dio/dio.dart';
@@ -15,6 +16,24 @@ class AuthService {
   static const String _userKey = 'user_data';
   
   Future<Result<UserModel>> login(String email, String password) async {
+    // Demo Login Bypass
+    if (email == 'demo@krishi.com' && password == 'demo123') {
+      final demoUser = UserModel(
+        id: 'demo-user-123',
+        name: 'Demo User',
+        email: 'demo@krishi.com',
+        phone: '1234567890',
+        profileImageUrl: null,
+        createdAt: DateTime.now(),
+      );
+      
+      await saveUser(demoUser);
+      // Store a fake token
+      await _storage.write(key: _tokenKey, value: 'demo-token');
+      
+      return Result.success(demoUser);
+    }
+
     try {
       final response = await _dio.post(
         ApiConstants.login,
@@ -131,6 +150,9 @@ class AuthService {
     final token = await getToken();
     if (token == null) return false;
     
+    // Demo token logic
+    if (token == 'demo-token') return true;
+    
     try {
       return !JwtDecoder.isExpired(token);
     } catch (e) {
@@ -172,10 +194,14 @@ class AuthService {
       final userJson = await _storage.read(key: _userKey);
       if (userJson == null) return null;
       
-      // In production, use proper JSON deserialization with dart:convert
-      // For now, return null - user will be fetched from API when needed
-      // This avoids complex string parsing issues
-      return null;
+      // Fixed: Properly decode JSON now that saveUser uses jsonEncode
+      try {
+        final Map<String, dynamic> userMap = jsonDecode(userJson);
+        return UserModel.fromJson(userMap);
+      } catch (e) {
+        // Fallback for old data or errors
+        return null;
+      }
     } catch (e) {
       return null;
     }
@@ -184,11 +210,10 @@ class AuthService {
   Future<void> saveUser(UserModel user) async {
     // Store user as JSON string - using dart:convert for proper serialization
     final userJson = user.toJson();
-    final jsonString = userJson.toString();
+    final jsonString = jsonEncode(userJson);
     await _storage.write(
       key: _userKey,
       value: jsonString,
     );
   }
 }
-

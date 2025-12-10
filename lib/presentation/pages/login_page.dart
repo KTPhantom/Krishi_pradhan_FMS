@@ -65,7 +65,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'FarmVerse',
+                    'Krishi Pradhan',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 32,
@@ -82,7 +82,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       color: Colors.black54,
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Demo Credentials:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText('Email: demo@krishi.com'),
+                        SelectableText('Password: demo123'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,

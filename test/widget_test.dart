@@ -8,24 +8,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mockito/mockito.dart';
 import '../lib/main.dart';
+import '../lib/presentation/providers/auth_provider.dart';
+import '../lib/data/services/auth_service.dart';
+import '../lib/data/models/user_model.dart';
+import '../lib/core/utils/result.dart';
+
+class FakeAuthService extends Fake implements AuthService {
+  @override
+  Future<bool> isLoggedIn() async => false;
+  
+  @override
+  Future<UserModel?> getCurrentUser() async => null;
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App renders login page smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const FarmVerseApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authServiceProvider.overrideWithValue(FakeAuthService()),
+        ],
+        child: const KrishiPradhanApp(),
+      ),
+    );
+    
+    // Wait for the widget to settle (animations etc)
+    await tester.pumpAndSettle();
 
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
+    // Verify that our app title is present (on Login Page)
+    expect(find.text('Krishi Pradhan'), findsOneWidget);
     expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
   });
 }

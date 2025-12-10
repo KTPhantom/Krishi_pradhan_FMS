@@ -20,13 +20,13 @@ void main() async {
   await initAppState();
   runApp(
     const ProviderScope(
-      child: FarmVerseApp(),
+      child: KrishiPradhanApp(),
     ),
   );
 }
 
-class FarmVerseApp extends ConsumerWidget {
-  const FarmVerseApp({super.key});
+class KrishiPradhanApp extends ConsumerWidget {
+  const KrishiPradhanApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,7 +40,7 @@ class FarmVerseApp extends ConsumerWidget {
           builder: (context, themeMode, __) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
-              title: 'FarmVerse',
+              title: 'Krishi Pradhan',
               theme: ThemeData(
                 useMaterial3: true,
                 scaffoldBackgroundColor: Colors.white,
