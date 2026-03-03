@@ -1,9 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Environment configuration manager
 class EnvConfig {
   static Future<void> load() async {
-    await dotenv.load(fileName: '.env');
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      // If .env file fails to load (e.g., missing from asset bundle on device),
+      // fall back to default values defined in the getters below.
+      debugPrint('Warning: Failed to load .env file: $e');
+    }
   }
 
   // API Configuration

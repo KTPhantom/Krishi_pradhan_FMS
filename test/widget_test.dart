@@ -5,16 +5,16 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mockito/mockito.dart';
-import '../lib/main.dart';
-import '../lib/presentation/providers/auth_provider.dart';
-import '../lib/data/services/auth_service.dart';
-import '../lib/data/models/user_model.dart';
-import '../lib/core/utils/result.dart';
+
+import 'package:krishi_pradhan/main.dart';
+import 'package:krishi_pradhan/controllers/auth_controller.dart';
+import 'package:krishi_pradhan/data/services/auth_service.dart';
+import 'package:krishi_pradhan/models/user/user_model.dart';
+
 
 class FakeAuthService extends Fake implements AuthService {
   @override

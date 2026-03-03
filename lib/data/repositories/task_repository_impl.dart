@@ -3,8 +3,8 @@ import '../../core/network/api_client.dart';
 import '../../core/utils/result.dart';
 import '../../core/errors/failures.dart';
 import '../../core/constants/api_constants.dart';
-import '../../data/models/task_model.dart';
-import '../../data/database/app_database.dart';
+import '../../models/task/task_model.dart';
+import '../local/app_database.dart';
 import '../../domain/repositories/task_repository.dart';
 
 class TaskRepositoryImpl implements TaskRepository {

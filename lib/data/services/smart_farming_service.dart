@@ -1,5 +1,5 @@
-import '../models/market_intelligence_model.dart';
-import '../models/weather_alert_model.dart';
+import '../../models/market/market_intelligence_model.dart';
+import '../../models/dashboard/weather_alert_model.dart';
 import '../../core/utils/result.dart';
 
 abstract class SmartFarmingService {

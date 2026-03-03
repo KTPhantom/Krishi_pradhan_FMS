@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
-import '../models/user_model.dart';
+import '../../models/user/user_model.dart';
 
 class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -15,22 +15,31 @@ class AuthService {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
   
-  Future<Result<UserModel>> login(String email, String password) async {
+  Future<Result<UserModel>> login(String username, String password) async {
     // Demo Login Bypass
-    if (email == 'demo@krishi.com' && password == 'demo123') {
+    if (username == 'admin' && password == 'admin') {
       final demoUser = UserModel(
-        id: 'demo-user-123',
-        name: 'Demo User',
-        email: 'demo@krishi.com',
-        phone: '1234567890',
-        profileImageUrl: null,
+        id: 'demo-admin-123',
+        name: 'Admin',
+        email: '',
+        role: 'admin',
         createdAt: DateTime.now(),
       );
-      
       await saveUser(demoUser);
-      // Store a fake token
       await _storage.write(key: _tokenKey, value: 'demo-token');
-      
+      return Result.success(demoUser);
+    }
+
+    if (username == 'worker' && password == 'worker') {
+      final demoUser = UserModel(
+        id: 'demo-worker-123',
+        name: 'Worker',
+        email: '',
+        role: 'worker',
+        createdAt: DateTime.now(),
+      );
+      await saveUser(demoUser);
+      await _storage.write(key: _tokenKey, value: 'demo-token');
       return Result.success(demoUser);
     }
 
@@ -38,19 +47,15 @@ class AuthService {
       final response = await _dio.post(
         ApiConstants.login,
         data: {
-          'email': email,
+          'username': username,
           'password': password,
         },
       );
       
       final token = response.data['token'] as String;
-      final refreshToken = response.data['refresh_token'] as String?;
       final userData = response.data['user'] as Map<String, dynamic>;
       
       await _storage.write(key: _tokenKey, value: token);
-      if (refreshToken != null) {
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
-      }
       
       final user = UserModel.fromJson(userData);
       await saveUser(user);
@@ -59,12 +64,12 @@ class AuthService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         return Result.failure(
-          Failure.unauthorized(message: 'Invalid email or password'),
+          Failure.unauthorized(message: 'Invalid username or password'),
         );
       }
       return Result.failure(
         Failure.server(
-          message: e.response?.data?['message'] ?? 'Login failed',
+          message: e.response?.data?['error'] ?? 'Login failed',
           statusCode: e.response?.statusCode,
         ),
       );
@@ -76,39 +81,32 @@ class AuthService {
   }
   
   Future<Result<UserModel>> register({
-    required String name,
-    required String email,
+    required String username,
     required String password,
-    String? phone,
+    String role = 'worker',
   }) async {
     try {
       final response = await _dio.post(
         ApiConstants.register,
         data: {
-          'name': name,
-          'email': email,
+          'username': username,
           'password': password,
-          if (phone != null) 'phone': phone,
+          'role': role,
         },
       );
       
-      final token = response.data['token'] as String;
-      final refreshToken = response.data['refresh_token'] as String?;
-      final userData = response.data['user'] as Map<String, dynamic>;
-      
-      await _storage.write(key: _tokenKey, value: token);
-      if (refreshToken != null) {
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
+      // After registration, auto-login to get the token and user
+      if (response.data['success'] == true) {
+        return login(username, password);
       }
       
-      final user = UserModel.fromJson(userData);
-      await saveUser(user);
-      
-      return Result.success(user);
+      return Result.failure(
+        Failure.server(message: 'Registration failed'),
+      );
     } on DioException catch (e) {
       return Result.failure(
         Failure.server(
-          message: e.response?.data?['message'] ?? 'Registration failed',
+          message: e.response?.data?['error'] ?? 'Registration failed',
           statusCode: e.response?.statusCode,
         ),
       );
@@ -170,7 +168,7 @@ class AuthService {
   Future<void> logout() async {
     try {
       final token = await getToken();
-      if (token != null) {
+      if (token != null && token != 'demo-token') {
         await _dio.post(
           ApiConstants.logout,
           options: Options(
@@ -194,12 +192,10 @@ class AuthService {
       final userJson = await _storage.read(key: _userKey);
       if (userJson == null) return null;
       
-      // Fixed: Properly decode JSON now that saveUser uses jsonEncode
       try {
         final Map<String, dynamic> userMap = jsonDecode(userJson);
         return UserModel.fromJson(userMap);
       } catch (e) {
-        // Fallback for old data or errors
         return null;
       }
     } catch (e) {
@@ -208,7 +204,6 @@ class AuthService {
   }
   
   Future<void> saveUser(UserModel user) async {
-    // Store user as JSON string - using dart:convert for proper serialization
     final userJson = user.toJson();
     final jsonString = jsonEncode(userJson);
     await _storage.write(

@@ -1,0 +1,8 @@
+﻿Analyzing lib...
+
+warning - views\fields\field_detail_page.dart:46:19 - Unnecessary cast. Try removing the cast. - unnecessary_cast
+warning - views\tasks\task_detail_page.dart:20:17 - The value of the field '_fields' isn't used. Try removing the field, or using it. - unused_field
+warning - views\tasks\task_detail_page.dart:21:17 - The value of the field '_crops' isn't used. Try removing the field, or using it. - unused_field
+   info - views\tasks\task_management_page.dart:446:62 - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext. - use_build_context_synchronously
+
+4 issues found.

@@ -3,8 +3,8 @@ import '../../core/network/api_client.dart';
 import '../../core/utils/result.dart';
 import '../../core/errors/failures.dart';
 import '../../core/constants/api_constants.dart';
-import '../../data/models/product_model.dart';
-import '../../data/database/app_database.dart';
+import '../../models/market/product_model.dart';
+import '../local/app_database.dart';
 import '../../domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

@@ -26,6 +26,8 @@ dependencies:
   jwt_decoder: ^2.0.1
   # Phase 1: Error Handling
   fluttertoast: ^8.2.4
+  # Phase 1: UUID Generation
+  uuid: ^4.2.1
   # Phase 2: Local Database
   drift: ^2.14.0
   sqlite3_flutter_libs: ^0.5.18
@@ -39,6 +41,7 @@ dependencies:
   geocoding: ^2.1.1
   # Phase 2: Image Handling
   image_picker: ^1.0.5
+  file_picker: ^8.0.0
   cached_network_image: ^3.3.1
   # Phase 2: Weather API
   http: ^1.2.0
@@ -53,6 +56,7 @@ dev_dependencies:
   mockito: ^5.4.4
   # Phase 2: Database Code Generation
   drift_dev: ^2.14.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true

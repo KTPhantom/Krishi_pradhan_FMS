@@ -1,5 +1,5 @@
 import '../../core/utils/result.dart';
-import '../../data/models/field_model.dart';
+import '../../models/field/field_model.dart';
 
 abstract class FieldRepository {
   Future<Result<List<FieldModel>>> getFields({bool forceRefresh = false});

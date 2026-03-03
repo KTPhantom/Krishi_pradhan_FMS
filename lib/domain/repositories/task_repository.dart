@@ -1,5 +1,5 @@
 import '../../core/utils/result.dart';
-import '../../data/models/task_model.dart';
+import '../../models/task/task_model.dart';
 
 abstract class TaskRepository {
   Future<Result<List<TaskModel>>> getTasks({
